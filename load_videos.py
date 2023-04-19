@@ -33,8 +33,17 @@ def run(data):
 
     if not os.path.exists(os.path.join(args.video_folder, video_id.split('#')[0] + '.mp4')):
        print ('Can not load video %s, broken link' % video_id.split('#')[0])
-       return 
-    reader = imageio.get_reader(os.path.join(args.video_folder, video_id.split('#')[0] + '.mp4'))
+       return
+    try:
+        reader = imageio.get_reader(os.path.join(args.video_folder, video_id.split('#')[0] + '.mp4'))
+    except:
+        download(video_id.split('#')[0], args)
+        try:
+            reader = imageio.get_reader(os.path.join(args.video_folder, video_id.split('#')[0] + '.mp4'))
+        except:
+            print ('Can not load video %s, broken link' % video_id.split('#')[0])
+            return
+
     fps = reader.get_meta_data()['fps']
 
     df = pd.read_csv(args.metadata)
@@ -61,15 +70,17 @@ def run(data):
                     entry['frames'].append(crop)
     except imageio.core.format.CannotReadFrameError:
         None
-
-    for entry in all_chunks_dict:
-        if 'person_id' in df:
-            first_part = df['person_id'].iloc[0] + "#"
-        else:
-            first_part = ""
-        first_part = first_part + '#'.join(video_id.split('#')[::-1])
-        path = first_part + '#' + str(entry['start']).zfill(6) + '#' + str(entry['end']).zfill(6) + '.mp4'
-        save(os.path.join(args.out_folder, partition, path), entry['frames'], args.format)
+    try:
+        for entry in all_chunks_dict:
+            if 'person_id' in df:
+                first_part = df['person_id'].iloc[0] + "#"
+            else:
+                first_part = ""
+            first_part = first_part + '#'.join(video_id.split('#')[::-1])
+            path = first_part + '#' + str(entry['start']).zfill(6) + '#' + str(entry['end']).zfill(6) + '.mp4'
+            save(os.path.join(args.out_folder, partition, path), entry['frames'], args.format)
+    except:
+        pass
 
 
 if __name__ == "__main__":
