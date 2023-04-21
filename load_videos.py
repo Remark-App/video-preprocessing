@@ -90,8 +90,10 @@ def run(data):
             first_part = first_part + '#'.join(video_id.split('#')[::-1])
             path = first_part + '#' + str(entry['start']).zfill(6) + '#' + str(entry['end']).zfill(6) + '.mp4'
             save(os.path.join(args.out_folder, partition, path), entry['frames'], args.format)
+            print('Done %s' % path)
     except:
         pass
+    print('Done %s' % video_id)
 
 
 if __name__ == "__main__":
