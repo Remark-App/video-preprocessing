@@ -58,6 +58,15 @@ def run(data):
     try:
         for i, frame in enumerate(reader):
             for entry in all_chunks_dict:
+                if 'person_id' in df:
+                    first_part = df['person_id'].iloc[0] + "#"
+                else:
+                    first_part = ""
+                first_part = first_part + '#'.join(video_id.split('#')[::-1])
+                path = first_part + '#' + str(entry['start']).zfill(6) + '#' + str(entry['end']).zfill(6) + '.mp4'
+                # if exists, do not save
+                if os.path.exists(os.path.join(args.out_folder, partition, path)):
+                    continue
                 if (i * ref_fps >= entry['start'] * fps) and (i * ref_fps < entry['end'] * fps):
                     left, top, right, bot = entry['bbox']
                     left = int(left / (ref_width / frame.shape[1]))
@@ -68,10 +77,12 @@ def run(data):
                     if args.image_shape is not None:
                        crop = img_as_ubyte(resize(crop, args.image_shape, anti_aliasing=True))
                     entry['frames'].append(crop)
-    except imageio.core.format.CannotReadFrameError:
-        None
+    except Exception:
+        pass
     try:
         for entry in all_chunks_dict:
+            if not entry['frames']:
+                continue
             if 'person_id' in df:
                 first_part = df['person_id'].iloc[0] + "#"
             else:
@@ -109,4 +120,4 @@ if __name__ == "__main__":
     pool = Pool(processes=args.workers)
     args_list = cycle([args])
     for chunks_data in tqdm(pool.imap_unordered(run, zip(video_ids, args_list))):
-        None  
+        pass
