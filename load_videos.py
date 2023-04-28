@@ -26,6 +26,45 @@ def download(video_id, args):
     return video_path
 
 
+def make_square(x1, y1, x2, y2, max_x, max_y, scale=1.0):
+    # 计算矩形的宽度和高度
+    width = abs(x2 - x1)
+    height = abs(y2 - y1)
+
+    # 找到最大的边长
+    max_side = max(width, height)
+
+    # 计算矩形中心点
+    center_x = (x1 + x2) / 2
+    center_y = (y1 + y2) / 2
+
+    # 计算新的左上角和右下角坐标
+    new_x1 = int(center_x - max_side / 2 * scale)
+    new_y1 = int(center_y - max_side / 2 * scale)
+    new_x2 = int(center_x + max_side / 2 * scale)
+    new_y2 = int(center_y + max_side / 2 * scale)
+
+    # 检查是否超出画布范围
+    if new_x1 < 0:
+        offset = -new_x1
+        new_x1 += offset
+        new_x2 += offset
+    elif new_x2 > max_x:
+        offset = new_x2 - max_x
+        new_x1 -= offset
+        new_x2 -= offset
+
+    if new_y1 < 0:
+        offset = -new_y1
+        new_y1 += offset
+        new_y2 += offset
+    elif new_y2 > max_y:
+        offset = new_y2 - max_y
+        new_y1 -= offset
+        new_y2 -= offset
+
+    return new_x1, new_y1, new_x2, new_y2
+
 def run(data):
     video_id, args = data
     if not os.path.exists(os.path.join(args.video_folder, video_id.split('#')[0] + '.mp4')):
@@ -73,6 +112,7 @@ def run(data):
                     top = int(top / (ref_height / frame.shape[0]))
                     right = int(right / (ref_width / frame.shape[1]))
                     bot = int(bot / (ref_height / frame.shape[0]))
+                    left, top, right, bot = make_square(left, top, right, bot, frame.shape[1], frame.shape[0], 1.1)
                     crop = frame[top:bot, left:right]
                     if args.image_shape is not None:
                        crop = img_as_ubyte(resize(crop, args.image_shape, anti_aliasing=True))
